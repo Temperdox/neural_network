@@ -1,0 +1,149 @@
+<!doctype html>
+<html class="no-js" lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Neural Network Digit Recognition</title>
+  <link rel="stylesheet" href="css/style.css">
+  <meta name="description" content="Draw a digit and watch a neural network predict it in real-time with interactive visualization">
+
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.png">
+
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#0a0a1a">
+</head>
+
+<body>
+  <div id="app">
+    <header>
+      <h1>Neural Network Digit Recognition</h1>
+      <p class="subtitle">Train a neural network on MNIST data, then draw to test it</p>
+    </header>
+
+    <main>
+      <div class="left-column">
+        <!-- Training Panel -->
+        <section class="training-section">
+          <h2>Model Training</h2>
+          <div class="model-status" id="model-status">
+            <span class="status-dot untrained"></span>
+            <span id="status-text">No model loaded</span>
+          </div>
+
+          <!-- MNIST data status / manual download panel (hidden by default) -->
+          <div class="mnist-panel hidden" id="mnist-panel">
+            <p class="mnist-info">
+              MNIST dataset could not be auto-downloaded (CORS restriction).
+              Please download the 4 files below, then select them:
+            </p>
+            <ol class="download-list" id="download-list"></ol>
+            <div class="file-upload-area">
+              <label for="mnist-files" class="file-upload-btn">
+                Select Downloaded Files
+              </label>
+              <input type="file" id="mnist-files" multiple accept=".gz" class="hidden">
+              <span class="file-status" id="file-status">No files selected</span>
+            </div>
+          </div>
+
+          <div class="training-config">
+            <div class="config-row">
+              <label for="epochs-input">Epochs:</label>
+              <input type="number" id="epochs-input" value="10" min="1" max="100" step="1">
+            </div>
+            <div class="config-row">
+              <label for="lr-input">Learning rate:</label>
+              <input type="number" id="lr-input" value="0.01" min="0.0001" max="1" step="0.001">
+            </div>
+            <div class="config-row">
+              <label for="batch-input">Batch size:</label>
+              <select id="batch-input">
+                <option value="16">16</option>
+                <option value="32" selected>32</option>
+                <option value="64">64</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="training-actions">
+            <button id="train-btn" class="btn-primary">Train Model</button>
+            <button id="stop-btn" class="btn-secondary" disabled>Stop</button>
+          </div>
+
+          <div class="progress-area hidden" id="progress-area">
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-stats">
+              <span id="progress-epoch">Epoch 0/0</span>
+              <span id="progress-accuracy">Accuracy: -</span>
+              <span id="progress-loss">Loss: -</span>
+            </div>
+          </div>
+
+          <div class="model-actions">
+            <button id="save-btn" class="btn-small" disabled>Save to File</button>
+            <button id="load-file-btn" class="btn-small">Load File</button>
+            <button id="load-url-btn" class="btn-small">Load URL</button>
+          </div>
+          <input type="file" id="model-file-input" accept=".json" class="hidden">
+          <div class="model-info" id="model-info"></div>
+        </section>
+
+        <!-- Drawing Panel -->
+        <section class="drawing-section">
+          <h2>Draw Here</h2>
+          <div class="canvas-wrapper">
+            <canvas id="draw-canvas" width="280" height="280"></canvas>
+          </div>
+          <div class="canvas-controls">
+            <button id="clear-btn">Clear</button>
+            <button id="predict-btn" disabled>Predict</button>
+          </div>
+          <div class="prediction-result">
+            <span class="label">Prediction:</span>
+            <span id="prediction-value" class="value">-</span>
+            <span class="label">Confidence:</span>
+            <span id="confidence-value" class="value">-</span>
+          </div>
+          <div class="output-bars" id="output-bars"></div>
+        </section>
+      </div>
+
+      <section class="visualization-section">
+        <h2>Network Visualization</h2>
+        <div class="viz-controls">
+          <label>
+            <input type="checkbox" id="show-weights" checked>
+            Show weight colors
+          </label>
+          <label>
+            <input type="checkbox" id="show-values" checked>
+            Show activation values
+          </label>
+        </div>
+        <div class="network-viz-wrapper">
+          <canvas id="network-canvas"></canvas>
+        </div>
+        <div class="legend">
+          <div class="legend-item">
+            <span class="legend-swatch positive"></span> Positive weight
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch negative"></span> Negative weight
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch activation"></span> Node activation
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- script injected by HtmlWebpackPlugin -->
+</body>
+
+</html>
