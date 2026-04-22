@@ -132,7 +132,379 @@ function drawStaticDiagram() {
 }
 
 // ============================================================
-// Live Demo (Slide 7)
+// Key Concepts Visualizations (Slide 4)
+// ============================================================
+const CONCEPT_COLORS = {
+  bg: '#0a0a1a',
+  grid: 'rgba(162, 155, 254, 0.08)',
+  axis: 'rgba(162, 155, 254, 0.4)',
+  node: '#2d2d5e',
+  nodeStroke: '#a29bfe',
+  text: '#e0e0ff',
+  textDim: '#8888bb',
+  positive: '#00cec9',
+  negative: '#ff6b6b',
+  activation: '#ffeaa7',
+  accent: '#a29bfe',
+};
+
+let weightState = { w: 0.75, phase: 0 };
+let biasState = { b: 0.0 };
+let activationState = { type: 'sigmoid' };
+
+function initConceptDemos() {
+  const wSlider = document.getElementById('weight-slider');
+  const bSlider = document.getElementById('bias-slider');
+  if (!wSlider || !bSlider) return;
+
+  wSlider.addEventListener('input', (e) => {
+    weightState.w = parseFloat(e.target.value);
+    document.getElementById('weight-value').textContent = weightState.w.toFixed(2);
+    document.getElementById('weight-w-readout').textContent = weightState.w.toFixed(2);
+    const out = 1.0 * weightState.w;
+    document.getElementById('weight-out-readout').textContent = out.toFixed(2);
+    drawWeightDemo();
+  });
+
+  bSlider.addEventListener('input', (e) => {
+    biasState.b = parseFloat(e.target.value);
+    document.getElementById('bias-value').textContent = biasState.b.toFixed(2);
+    document.getElementById('bias-b-readout').textContent = 'b = ' + biasState.b.toFixed(2);
+    drawBiasDemo();
+  });
+
+  document.querySelectorAll('.act-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.act-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activationState.type = btn.dataset.act;
+      updateActivationLabels();
+      drawActivationDemo();
+    });
+  });
+
+  // Initial draw
+  drawWeightDemo();
+  drawBiasDemo();
+  drawActivationDemo();
+
+  // Animate the weight pulse continuously
+  function animate() {
+    weightState.phase = (weightState.phase + 0.008) % 1;
+    drawWeightDemo();
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+}
+
+function setupConceptCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width || canvas.width;
+  const h = rect.height || canvas.height;
+  if (canvas.width !== w * dpr) {
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+}
+
+function drawWeightDemo() {
+  const canvas = document.getElementById('weight-canvas');
+  if (!canvas) return;
+  const { ctx, w, h } = setupConceptCanvas(canvas);
+  const { w: weight, phase } = weightState;
+
+  ctx.fillStyle = CONCEPT_COLORS.bg;
+  ctx.fillRect(0, 0, w, h);
+
+  const inX = w * 0.18;
+  const outX = w * 0.82;
+  const cy = h * 0.5;
+  const r = 22;
+
+  // Connection line
+  const mag = Math.min(Math.abs(weight), 2) / 2;
+  const thickness = 1.5 + mag * 7;
+  const lineColor = weight >= 0 ? CONCEPT_COLORS.positive : CONCEPT_COLORS.negative;
+  const alpha = 0.3 + mag * 0.7;
+
+  ctx.beginPath();
+  ctx.moveTo(inX + r, cy);
+  ctx.lineTo(outX - r, cy);
+  ctx.strokeStyle = hexWithAlpha(lineColor, alpha);
+  ctx.lineWidth = thickness;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Pulse traveling along the line
+  if (Math.abs(weight) > 0.02) {
+    const direction = weight >= 0 ? 1 : -1;
+    const p = direction > 0 ? phase : 1 - phase;
+    const px = (inX + r) + ((outX - r) - (inX + r)) * p;
+    const pulseR = 3 + mag * 4;
+    ctx.beginPath();
+    ctx.arc(px, cy, pulseR, 0, Math.PI * 2);
+    ctx.fillStyle = hexWithAlpha(lineColor, 0.9);
+    ctx.shadowColor = lineColor;
+    ctx.shadowBlur = 12;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // Input neuron
+  drawNeuron(ctx, inX, cy, r, '#6c5ce7');
+  ctx.fillStyle = CONCEPT_COLORS.text;
+  ctx.font = '600 14px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('1.0', inX, cy);
+  ctx.fillStyle = CONCEPT_COLORS.textDim;
+  ctx.font = '10px system-ui, sans-serif';
+  ctx.fillText('input', inX, cy + r + 14);
+
+  // Output neuron
+  const out = 1.0 * weight;
+  drawNeuron(ctx, outX, cy, r, weight >= 0 ? CONCEPT_COLORS.positive : CONCEPT_COLORS.negative, Math.min(Math.abs(out), 2) / 2);
+  ctx.fillStyle = CONCEPT_COLORS.text;
+  ctx.font = '600 13px system-ui, sans-serif';
+  ctx.fillText(out.toFixed(2), outX, cy);
+  ctx.fillStyle = CONCEPT_COLORS.textDim;
+  ctx.font = '10px system-ui, sans-serif';
+  ctx.fillText('output', outX, cy + r + 14);
+
+  // Weight label on connection
+  ctx.fillStyle = CONCEPT_COLORS.textDim;
+  ctx.font = '11px ui-monospace, monospace';
+  ctx.fillText(`w = ${weight.toFixed(2)}`, (inX + outX) / 2, cy - thickness / 2 - 10);
+}
+
+function drawBiasDemo() {
+  const canvas = document.getElementById('bias-canvas');
+  if (!canvas) return;
+  const { ctx, w, h } = setupConceptCanvas(canvas);
+  const { b } = biasState;
+
+  ctx.fillStyle = CONCEPT_COLORS.bg;
+  ctx.fillRect(0, 0, w, h);
+
+  // Plot area
+  const pad = 22;
+  const plotW = w - pad * 2;
+  const plotH = h - pad * 2;
+  const xMin = -6, xMax = 6;
+  const yMin = 0, yMax = 1;
+
+  const xToPx = (x) => pad + ((x - xMin) / (xMax - xMin)) * plotW;
+  const yToPx = (y) => pad + plotH - ((y - yMin) / (yMax - yMin)) * plotH;
+
+  drawGrid(ctx, pad, plotW, plotH, xMin, xMax, yMin, yMax, 2, 0.25);
+
+  // Reference sigmoid (b = 0) - faint
+  ctx.beginPath();
+  for (let i = 0; i <= 120; i++) {
+    const x = xMin + (xMax - xMin) * (i / 120);
+    const y = sigmoid(x);
+    const px = xToPx(x);
+    const py = yToPx(y);
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.strokeStyle = 'rgba(162, 155, 254, 0.25)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([3, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Shifted sigmoid σ(x + b)
+  ctx.beginPath();
+  for (let i = 0; i <= 200; i++) {
+    const x = xMin + (xMax - xMin) * (i / 200);
+    const y = sigmoid(x + b);
+    const px = xToPx(x);
+    const py = yToPx(y);
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.strokeStyle = CONCEPT_COLORS.activation;
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = CONCEPT_COLORS.activation;
+  ctx.shadowBlur = 8;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Firing midpoint (where σ = 0.5, i.e. x = -b)
+  const fireX = -b;
+  if (fireX >= xMin && fireX <= xMax) {
+    const fx = xToPx(fireX);
+    const fy = yToPx(0.5);
+    ctx.beginPath();
+    ctx.moveTo(fx, yToPx(0));
+    ctx.lineTo(fx, yToPx(1));
+    ctx.strokeStyle = 'rgba(255, 234, 167, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.beginPath();
+    ctx.arc(fx, fy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = CONCEPT_COLORS.activation;
+    ctx.fill();
+  }
+
+  // Axis labels
+  ctx.fillStyle = CONCEPT_COLORS.textDim;
+  ctx.font = '10px system-ui, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('1', pad - 4, yToPx(1));
+  ctx.fillText('0', pad - 4, yToPx(0));
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('x', w - pad + 10, yToPx(0) - 6);
+}
+
+function drawActivationDemo() {
+  const canvas = document.getElementById('activation-canvas');
+  if (!canvas) return;
+  const { ctx, w, h } = setupConceptCanvas(canvas);
+  const type = activationState.type;
+
+  ctx.fillStyle = CONCEPT_COLORS.bg;
+  ctx.fillRect(0, 0, w, h);
+
+  const pad = 22;
+  const plotW = w - pad * 2;
+  const plotH = h - pad * 2;
+  const xMin = -5, xMax = 5;
+  let yMin = -1.2, yMax = 1.2;
+  if (type === 'sigmoid') { yMin = -0.2; yMax = 1.2; }
+  if (type === 'relu') { yMin = -0.5; yMax = 4; }
+
+  const xToPx = (x) => pad + ((x - xMin) / (xMax - xMin)) * plotW;
+  const yToPx = (y) => pad + plotH - ((y - yMin) / (yMax - yMin)) * plotH;
+
+  // Grid and axes
+  drawGrid(ctx, pad, plotW, plotH, xMin, xMax, yMin, yMax, 1, (yMax - yMin) / 4);
+
+  // x-axis at y=0
+  if (yMin < 0 && yMax > 0) {
+    ctx.beginPath();
+    ctx.moveTo(pad, yToPx(0));
+    ctx.lineTo(pad + plotW, yToPx(0));
+    ctx.strokeStyle = CONCEPT_COLORS.axis;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  // y-axis at x=0
+  ctx.beginPath();
+  ctx.moveTo(xToPx(0), pad);
+  ctx.lineTo(xToPx(0), pad + plotH);
+  ctx.strokeStyle = CONCEPT_COLORS.axis;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Curve
+  ctx.beginPath();
+  for (let i = 0; i <= 200; i++) {
+    const x = xMin + (xMax - xMin) * (i / 200);
+    const y = applyActivation(x, type);
+    const px = xToPx(x);
+    const py = yToPx(y);
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.strokeStyle = CONCEPT_COLORS.positive;
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = CONCEPT_COLORS.positive;
+  ctx.shadowBlur = 10;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Axis labels
+  ctx.fillStyle = CONCEPT_COLORS.textDim;
+  ctx.font = '10px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('z', pad + plotW + 6, yToPx(0) - 4);
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(yMax.toFixed(yMax >= 10 ? 0 : 1), pad - 4, yToPx(yMax));
+  ctx.fillText(yMin.toFixed(yMin <= -10 ? 0 : 1), pad - 4, yToPx(yMin));
+}
+
+function updateActivationLabels() {
+  const type = activationState.type;
+  const formulaEl = document.getElementById('activation-formula');
+  const readoutEl = document.getElementById('activation-readout');
+  if (!formulaEl || !readoutEl) return;
+  if (type === 'sigmoid') {
+    formulaEl.innerHTML = '&sigma;(z) = 1 / (1 + e<sup>&minus;z</sup>)';
+    readoutEl.textContent = 'Squashes any input into (0, 1).';
+  } else if (type === 'relu') {
+    formulaEl.innerHTML = 'ReLU(z) = max(0, z)';
+    readoutEl.textContent = 'Passes positives through, zeros out negatives.';
+  } else if (type === 'tanh') {
+    formulaEl.innerHTML = 'tanh(z) = (e<sup>z</sup> &minus; e<sup>&minus;z</sup>) / (e<sup>z</sup> + e<sup>&minus;z</sup>)';
+    readoutEl.textContent = 'Squashes input into (-1, 1), zero-centered.';
+  }
+}
+
+function applyActivation(x, type) {
+  if (type === 'sigmoid') return sigmoid(x);
+  if (type === 'relu') return Math.max(0, x);
+  if (type === 'tanh') return Math.tanh(x);
+  return x;
+}
+
+function sigmoid(x) {
+  return 1 / (1 + Math.exp(-x));
+}
+
+function drawGrid(ctx, pad, plotW, plotH, xMin, xMax, yMin, yMax, xStep, yStep) {
+  ctx.strokeStyle = CONCEPT_COLORS.grid;
+  ctx.lineWidth = 1;
+  for (let x = Math.ceil(xMin / xStep) * xStep; x <= xMax; x += xStep) {
+    const px = pad + ((x - xMin) / (xMax - xMin)) * plotW;
+    ctx.beginPath();
+    ctx.moveTo(px, pad);
+    ctx.lineTo(px, pad + plotH);
+    ctx.stroke();
+  }
+  for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax; y += yStep) {
+    const py = pad + plotH - ((y - yMin) / (yMax - yMin)) * plotH;
+    ctx.beginPath();
+    ctx.moveTo(pad, py);
+    ctx.lineTo(pad + plotW, py);
+    ctx.stroke();
+  }
+}
+
+function drawNeuron(ctx, x, y, r, color, intensity = 0.7) {
+  const grad = ctx.createRadialGradient(x, y, 2, x, y, r);
+  grad.addColorStop(0, hexWithAlpha(color, 0.4 + intensity * 0.4));
+  grad.addColorStop(1, hexWithAlpha(color, 0.15));
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.strokeStyle = hexWithAlpha(color, 0.9);
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+function hexWithAlpha(hex, alpha) {
+  if (hex.startsWith('rgba')) return hex;
+  let h = hex.replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// ============================================================
+// Live Demo (Slide 8)
 // ============================================================
 let network = null;
 let drawCanvas = null;
@@ -462,4 +834,5 @@ function sleep(ms) {
 document.addEventListener('DOMContentLoaded', () => {
   initSlides();
   drawStaticDiagram();
+  initConceptDemos();
 });

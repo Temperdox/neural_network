@@ -353,7 +353,161 @@ body::before {
 }
 
 /* ============================================================
-   SLIDE 4: How (steps grid)
+   SLIDE 4: Key Concepts Visualized
+   ============================================================ */
+.concepts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 1000px) {
+  .concepts-grid { grid-template-columns: 1fr; }
+}
+
+.concept-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--glass-shadow), var(--glass-inset);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  transition: all 0.3s ease;
+}
+
+.concept-card:hover {
+  background: var(--glass-bg-strong);
+  border-color: var(--glass-border-strong);
+  box-shadow: var(--glass-shadow-hover), var(--glass-inset);
+  transform: translateY(-2px);
+}
+
+.concept-card h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent-glow);
+  letter-spacing: 0.02em;
+}
+
+.concept-desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  min-height: 3.3em;
+}
+
+.concept-desc em {
+  color: var(--text-primary);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.concept-canvas-wrap {
+  width: 100%;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--glass-border);
+  padding: 0.25rem;
+  display: flex;
+  justify-content: center;
+}
+
+.concept-card canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+}
+
+.concept-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.concept-control.act-buttons {
+  flex-direction: row;
+  gap: 0.4rem;
+}
+
+.concept-control label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: space-between;
+}
+
+.control-value {
+  color: var(--accent-glow);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.concept-control input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+  background: transparent;
+}
+
+.act-btn {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.act-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--accent);
+  background: rgba(108, 92, 231, 0.1);
+}
+
+.act-btn.active {
+  background: var(--accent);
+  border-color: var(--accent-glow);
+  color: var(--text-primary);
+  box-shadow: 0 2px 10px rgba(108, 92, 231, 0.4);
+}
+
+.concept-formula {
+  padding: 0.5rem 0.7rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.concept-formula .hl-w { color: var(--positive); font-weight: 700; }
+.concept-formula .hl-b { color: var(--activation); font-weight: 700; }
+
+.concept-readout {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  min-height: 1.4em;
+}
+
+.concept-readout .hl-w { color: var(--positive); font-weight: 700; }
+.concept-readout .hl-b { color: var(--activation); font-weight: 700; }
+
+/* ============================================================
+   SLIDE 5: How (steps grid)
    ============================================================ */
 .steps-grid {
   display: grid;

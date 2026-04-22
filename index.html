@@ -98,8 +98,76 @@
     </div>
   </section>
 
-  <!-- ===== SLIDE 4: How ===== -->
+  <!-- ===== SLIDE 4: Key Concepts Visual ===== -->
   <section class="slide" data-slide="3">
+    <div class="slide-content">
+      <h2 class="slide-heading"><span class="heading-tag">Visualized</span>Weights, Bias &amp; Activation Functions</h2>
+      <div class="concepts-grid">
+
+        <!-- Weights Demo -->
+        <div class="concept-card">
+          <h3>Weights</h3>
+          <p class="concept-desc">The <em>strength</em> of a connection. Each input is multiplied by a weight before reaching the neuron.</p>
+          <div class="concept-canvas-wrap">
+            <canvas id="weight-canvas" width="340" height="180"></canvas>
+          </div>
+          <div class="concept-control">
+            <label>Weight (w): <span id="weight-value" class="control-value">0.75</span></label>
+            <input type="range" id="weight-slider" min="-2" max="2" step="0.05" value="0.75">
+          </div>
+          <div class="concept-formula">
+            output = input &times; <span class="hl-w">w</span>
+          </div>
+          <div class="concept-readout">
+            1.00 &times; <span id="weight-w-readout" class="hl-w">0.75</span> = <span id="weight-out-readout">0.75</span>
+          </div>
+        </div>
+
+        <!-- Bias Demo -->
+        <div class="concept-card">
+          <h3>Bias</h3>
+          <p class="concept-desc">A constant <em>offset</em> added before activation. It shifts where the neuron &ldquo;fires&rdquo;.</p>
+          <div class="concept-canvas-wrap">
+            <canvas id="bias-canvas" width="340" height="180"></canvas>
+          </div>
+          <div class="concept-control">
+            <label>Bias (b): <span id="bias-value" class="control-value">0.00</span></label>
+            <input type="range" id="bias-slider" min="-4" max="4" step="0.1" value="0">
+          </div>
+          <div class="concept-formula">
+            y = &sigma;(x + <span class="hl-b">b</span>)
+          </div>
+          <div class="concept-readout">
+            Adding <span id="bias-b-readout" class="hl-b">b = 0.00</span> shifts the curve along the x-axis.
+          </div>
+        </div>
+
+        <!-- Activation Demo -->
+        <div class="concept-card">
+          <h3>Activation</h3>
+          <p class="concept-desc">A nonlinear function applied to the neuron&rsquo;s total input. Lets networks learn complex patterns.</p>
+          <div class="concept-canvas-wrap">
+            <canvas id="activation-canvas" width="340" height="180"></canvas>
+          </div>
+          <div class="concept-control act-buttons">
+            <button data-act="sigmoid" class="act-btn active">Sigmoid</button>
+            <button data-act="relu" class="act-btn">ReLU</button>
+            <button data-act="tanh" class="act-btn">Tanh</button>
+          </div>
+          <div class="concept-formula" id="activation-formula">
+            &sigma;(z) = 1 / (1 + e<sup>&minus;z</sup>)
+          </div>
+          <div class="concept-readout" id="activation-readout">
+            Squashes any input into (0, 1).
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 5: How ===== -->
+  <section class="slide" data-slide="4">
     <div class="slide-content">
       <h2 class="slide-heading"><span class="heading-tag">How</span>How Neural Networks Learn</h2>
       <div class="steps-grid">
@@ -127,8 +195,8 @@
     </div>
   </section>
 
-  <!-- ===== SLIDE 5: Why ===== -->
-  <section class="slide" data-slide="4">
+  <!-- ===== SLIDE 6: Why ===== -->
+  <section class="slide" data-slide="5">
     <div class="slide-content">
       <h2 class="slide-heading"><span class="heading-tag">Why</span>Why Neural Networks Matter</h2>
       <div class="why-grid">
@@ -157,8 +225,8 @@
     </div>
   </section>
 
-  <!-- ===== SLIDE 6: References ===== -->
-  <section class="slide" data-slide="5">
+  <!-- ===== SLIDE 7: References ===== -->
+  <section class="slide" data-slide="6">
     <div class="slide-content">
       <h2 class="slide-heading"><span class="heading-tag">Sources</span>References</h2>
       <div class="references-list">
@@ -174,8 +242,8 @@
     </div>
   </section>
 
-  <!-- ===== SLIDE 7: Live Demo ===== -->
-  <section class="slide" data-slide="6">
+  <!-- ===== SLIDE 8: Live Demo ===== -->
+  <section class="slide" data-slide="7">
     <div class="slide-content demo-slide">
       <h2 class="slide-heading"><span class="heading-tag">Live Demo</span>Neural Network Digit Recognition</h2>
 
