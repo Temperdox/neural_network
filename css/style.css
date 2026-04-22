@@ -278,7 +278,7 @@ body::before {
 }
 
 /* ============================================================
-   GLASS CARD — shared mixin-like class for all card elements
+   GLASS CARD: shared mixin-like class for all card elements
    ============================================================ */
 .content-columns .content-block,
 .nn-diagram,
@@ -505,6 +505,84 @@ body::before {
 
 .concept-readout .hl-w { color: var(--positive); font-weight: 700; }
 .concept-readout .hl-b { color: var(--activation); font-weight: 700; }
+
+/* --- Combined (full-width) card --- */
+.combined-card {
+  grid-column: 1 / -1;
+}
+
+.combined-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+@media (max-width: 800px) {
+  .combined-layout { grid-template-columns: 1fr; }
+}
+
+.combined-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  justify-content: center;
+}
+
+.combined-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.6rem 0.75rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.summary-label {
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.72rem;
+}
+
+.summary-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+.summary-value.hl-w { color: var(--positive); }
+.summary-value.hl-b { color: var(--activation); }
+.summary-value.hl-act { color: var(--accent-glow); }
+
+.combined-formula { margin-top: 0; }
+
+.combined-readout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+}
+
+.combined-readout .eq-step { color: var(--text-secondary); }
+.combined-readout .eq-arrow { color: var(--accent-glow); font-weight: 700; }
+.combined-readout .eq-result { color: var(--positive); font-weight: 700; }
+
+.combined-canvas-wrap {
+  padding: 0.5rem;
+}
 
 /* ============================================================
    SLIDE 5: How (steps grid)
