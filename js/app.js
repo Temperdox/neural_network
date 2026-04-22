@@ -151,6 +151,7 @@ const CONCEPT_COLORS = {
 let weightState = { w: 0.75, phase: 0 };
 let biasState = { b: 0.0 };
 let activationState = { type: 'sigmoid' };
+let combinedState = { x: 0.5 };
 
 function initConceptDemos() {
   const wSlider = document.getElementById('weight-slider');
@@ -164,6 +165,7 @@ function initConceptDemos() {
     const out = 1.0 * weightState.w;
     document.getElementById('weight-out-readout').textContent = out.toFixed(2);
     drawWeightDemo();
+    updateCombinedDemo();
   });
 
   bSlider.addEventListener('input', (e) => {
@@ -171,6 +173,7 @@ function initConceptDemos() {
     document.getElementById('bias-value').textContent = biasState.b.toFixed(2);
     document.getElementById('bias-b-readout').textContent = 'b = ' + biasState.b.toFixed(2);
     drawBiasDemo();
+    updateCombinedDemo();
   });
 
   document.querySelectorAll('.act-btn').forEach(btn => {
@@ -180,31 +183,182 @@ function initConceptDemos() {
       activationState.type = btn.dataset.act;
       updateActivationLabels();
       drawActivationDemo();
+      updateCombinedDemo();
     });
   });
+
+  const xSlider = document.getElementById('input-x-slider');
+  if (xSlider) {
+    xSlider.addEventListener('input', (e) => {
+      combinedState.x = parseFloat(e.target.value);
+      document.getElementById('input-x-value').textContent = combinedState.x.toFixed(2);
+      updateCombinedDemo();
+    });
+  }
 
   // Initial draw
   drawWeightDemo();
   drawBiasDemo();
   drawActivationDemo();
+  updateCombinedDemo();
 
-  // Animate the weight pulse continuously
+  // Animate the weight pulse and combined pipeline continuously
   function animate() {
     weightState.phase = (weightState.phase + 0.008) % 1;
     drawWeightDemo();
+    drawCombinedDemo();
     requestAnimationFrame(animate);
   }
   requestAnimationFrame(animate);
 }
 
+function updateCombinedDemo() {
+  const w = weightState.w;
+  const b = biasState.b;
+  const x = combinedState.x;
+  const z = w * x + b;
+  const y = applyActivation(z, activationState.type);
+
+  const actNames = { sigmoid: 'σ', relu: 'ReLU', tanh: 'tanh' };
+  const actSymbol = actNames[activationState.type] || 'f';
+
+  const els = {
+    w: document.getElementById('combined-w'),
+    b: document.getElementById('combined-b'),
+    act: document.getElementById('combined-act'),
+    actname: document.getElementById('combined-actname'),
+    y: document.getElementById('combined-y'),
+    eq: document.getElementById('combined-equation'),
+  };
+  if (!els.w) return;
+
+  els.w.textContent = w.toFixed(2);
+  els.b.textContent = b.toFixed(2);
+  els.act.textContent = activationState.type;
+  els.actname.textContent = actSymbol;
+  els.y.textContent = y.toFixed(3);
+
+  els.eq.innerHTML =
+    `<span class="eq-step">${w.toFixed(2)} &middot; ${x.toFixed(2)} + ${b.toFixed(2)} = ${z.toFixed(3)}</span>` +
+    `<span class="eq-arrow">&rarr;</span>` +
+    `<span class="eq-result">y = ${y.toFixed(3)}</span>`;
+
+  drawCombinedDemo();
+}
+
+function drawCombinedDemo() {
+  const canvas = document.getElementById('combined-canvas');
+  if (!canvas) return;
+  const { ctx, w: W, h: H } = setupConceptCanvas(canvas);
+
+  ctx.fillStyle = CONCEPT_COLORS.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  const weight = weightState.w;
+  const bias = biasState.b;
+  const x = combinedState.x;
+  const z = weight * x + bias;
+  const y = applyActivation(z, activationState.type);
+  const actNames = { sigmoid: 'σ(·)', relu: 'ReLU', tanh: 'tanh' };
+
+  // Layout: 4 operation stages between 5 nodes
+  // [x] →(×w)→ [w·x] →(+b)→ [z] →(f)→ [y]
+  const nodeCount = 5;
+  const leftPad = 42;
+  const rightPad = 42;
+  const spacing = (W - leftPad - rightPad) / (nodeCount - 1);
+  const cy = H / 2;
+  const r = 22;
+
+  const nodes = [
+    { x: leftPad + spacing * 0, label: 'x',       value: x,  color: '#6c5ce7' },
+    { x: leftPad + spacing * 1, label: 'w·x',     value: weight * x, color: CONCEPT_COLORS.positive },
+    { x: leftPad + spacing * 2, label: 'z',       value: z,  color: CONCEPT_COLORS.activation },
+    { x: leftPad + spacing * 3, label: actNames[activationState.type] || 'f', value: null, color: CONCEPT_COLORS.accent, isOp: true },
+    { x: leftPad + spacing * 4, label: 'y',       value: y,  color: CONCEPT_COLORS.positive, isOutput: true },
+  ];
+  const ops = ['× w', '+ b', 'activate', ''];
+
+  // Connections with pulse
+  const phase = weightState.phase;
+  for (let i = 0; i < nodes.length - 1; i++) {
+    const a = nodes[i];
+    const b = nodes[i + 1];
+    ctx.beginPath();
+    ctx.moveTo(a.x + r, cy);
+    ctx.lineTo(b.x - r, cy);
+    ctx.strokeStyle = 'rgba(162, 155, 254, 0.35)';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // operation label above the line
+    if (ops[i]) {
+      ctx.fillStyle = CONCEPT_COLORS.textDim;
+      ctx.font = '600 11px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(ops[i], (a.x + b.x) / 2, cy - 14);
+    }
+
+    // pulse
+    const px = (a.x + r) + ((b.x - r) - (a.x + r)) * ((phase + i * 0.25) % 1);
+    ctx.beginPath();
+    ctx.arc(px, cy, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = CONCEPT_COLORS.accent;
+    ctx.shadowColor = CONCEPT_COLORS.accent;
+    ctx.shadowBlur = 8;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // Nodes
+  for (const n of nodes) {
+    const intensity = n.value !== null ? Math.min(Math.abs(n.value), 2) / 2 : 0.7;
+    drawNeuron(ctx, n.x, cy, r, n.color, intensity);
+
+    // Value or operation label inside
+    ctx.fillStyle = CONCEPT_COLORS.text;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (n.isOp) {
+      ctx.font = '600 11px ui-monospace, monospace';
+      ctx.fillText(n.label, n.x, cy);
+    } else {
+      ctx.font = '600 13px system-ui, sans-serif';
+      ctx.fillText(n.value.toFixed(2), n.x, cy);
+    }
+
+    // Label below
+    ctx.fillStyle = CONCEPT_COLORS.textDim;
+    ctx.font = '10px system-ui, sans-serif';
+    ctx.textBaseline = 'top';
+    const subLabel = n.isOp ? 'activation' : n.label;
+    ctx.fillText(subLabel, n.x, cy + r + 6);
+
+    // Highlight output
+    if (n.isOutput) {
+      ctx.strokeStyle = hexWithAlpha(CONCEPT_COLORS.positive, 0.6);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(n.x, cy, r + 4, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+}
+
 function setupConceptCanvas(canvas) {
   const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  const w = rect.width || canvas.width;
-  const h = rect.height || canvas.height;
-  if (canvas.width !== w * dpr) {
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
+  // Use clientWidth/Height (CSS pixels) as the source of truth.
+  // Fall back to the declared attribute size when the element isn't laid out yet
+  // (e.g. parent slide is display:none on initial draw).
+  const w = canvas.clientWidth || parseInt(canvas.getAttribute('width'), 10) || 340;
+  const h = canvas.clientHeight || parseInt(canvas.getAttribute('height'), 10) || 180;
+  const targetW = Math.round(w * dpr);
+  const targetH = Math.round(h * dpr);
+  if (canvas.width !== targetW || canvas.height !== targetH) {
+    canvas.width = targetW;
+    canvas.height = targetH;
   }
   const ctx = canvas.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

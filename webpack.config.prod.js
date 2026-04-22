@@ -8,6 +8,7 @@ module.exports = merge(common, {
   plugins: [
     new HtmlWebpackPlugin({
       template: './index.html',
+      hash: true,
     }),
     new CopyPlugin({
       patterns: [
