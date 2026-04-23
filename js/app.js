@@ -711,23 +711,31 @@ function initVideoCards(slide) {
         autoplay: '1',
         mute: '1',
         loop: '1',
-        playlist: id,        // Required for loop to work
-        controls: '0',
-        modestbranding: '1',
-        showinfo: '0',
-        rel: '0',
-        iv_load_policy: '3',
-        playsinline: '1',
-        disablekb: '1',
-        fs: '0',
+        playlist: id,           // Required for loop to work
+        controls: '0',          // Hide play/pause/progress bar
+        modestbranding: '1',    // Reduce YouTube branding
+        showinfo: '0',          // Legacy: hide video title
+        rel: '0',               // No "More videos" overlay (same channel only)
+        iv_load_policy: '3',    // Hide annotations
+        playsinline: '1',       // Inline play on iOS
+        disablekb: '1',         // Disable keyboard controls
+        fs: '0',                // Disable fullscreen button
+        cc_load_policy: '0',    // Don't auto-show captions
+        autohide: '1',          // Hide controls after a few seconds (legacy)
       });
       iframe.src = `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
       iframe.allow = 'autoplay; encrypted-media';
       iframe.setAttribute('frameborder', '0');
-      iframe.setAttribute('allowfullscreen', '');
+      iframe.setAttribute('tabindex', '-1');
       iframe.title = 'Video';
       iframe.addEventListener('load', () => iframe.classList.add('loaded'));
       container.appendChild(iframe);
+
+      // Apply optional per-card zoom (e.g. videos with built-in side letterboxing)
+      const zoom = parseFloat(card.dataset.zoom);
+      if (!isNaN(zoom) && zoom !== 1) {
+        iframe.style.setProperty('--video-zoom', String(zoom));
+      }
     }
   });
 }

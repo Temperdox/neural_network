@@ -46,6 +46,10 @@ html {
   /* Hide scrollbar entirely (scrolling still works via keyboard / touch / wheel). */
   scrollbar-width: none;          /* Firefox */
   -ms-overflow-style: none;        /* IE/old Edge */
+  /* Tells the browser to render form controls (dropdowns, date pickers,
+     scrollbars) in dark theme. Critical for the native <select> popup
+     and option rows to look correct on this dark background. */
+  color-scheme: dark;
 }
 
 html::-webkit-scrollbar,
@@ -783,6 +787,15 @@ input[type="range"]:focus { outline: none; }
   overflow: hidden;
 }
 
+/* Per-card uniform zoom for videos with built-in letterboxing inside the
+   source footage (e.g. the Tesla autopilot clip). Driven by a data-zoom
+   attribute set via JS as the --video-zoom custom property. Aspect ratio
+   is preserved because scale() applies uniformly to both axes. */
+.why-card.video-card .why-card-video iframe {
+  transform: translate(-50%, -50%) scale(var(--video-zoom, 1));
+  transform-origin: center center;
+}
+
 .why-card.video-card .why-card-video video {
   position: absolute;
   inset: 0;
@@ -1326,6 +1339,7 @@ input[type="range"]:focus { outline: none; }
   color: var(--text-primary);
   font-size: 0.8rem;
   transition: border-color 0.2s;
+  font-family: inherit;
 }
 
 .config-row input:focus,
@@ -1333,6 +1347,41 @@ input[type="range"]:focus { outline: none; }
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+}
+
+/* Custom dark-themed select with a chevron icon */
+.config-row select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding-right: 1.6rem;
+  background-color: rgba(255, 255, 255, 0.04);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'><path d='M1 1l4 4 4-4' stroke='%23a29bfe' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 9px 6px;
+  cursor: pointer;
+}
+
+/* Style the option rows themselves where the browser allows it (Firefox + Chromium with color-scheme: dark) */
+.config-row select option,
+.modal-body select option,
+select option {
+  background-color: #1a1a3e;
+  color: var(--text-primary);
+  padding: 0.4rem 0.6rem;
+}
+
+.config-row select option:checked,
+select option:checked {
+  background: linear-gradient(0deg, var(--accent) 0%, var(--accent) 100%);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.config-row select option:hover,
+select option:hover {
+  background-color: rgba(108, 92, 231, 0.4);
 }
 
 /* --- Buttons --- */
