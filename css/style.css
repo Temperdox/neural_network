@@ -787,12 +787,11 @@ input[type="range"]:focus { outline: none; }
   overflow: hidden;
 }
 
-/* Per-card uniform zoom for videos with built-in letterboxing inside the
-   source footage (e.g. the Tesla autopilot clip). Driven by a data-zoom
-   attribute set via JS as the --video-zoom custom property. Aspect ratio
-   is preserved because scale() applies uniformly to both axes. */
-.why-card.video-card .why-card-video iframe {
-  transform: translate(-50%, -50%) scale(var(--video-zoom, 1));
+/* Per-card override: cards with data-zoom get a fixed transform that
+   recenters and uniformly scales the iframe to crop source-footage
+   letterboxing (e.g. the Tesla autopilot clip). */
+.why-card.video-card[data-zoom] .why-card-video iframe {
+  transform: translate(-55%, -50%) scale(1.5);
   transform-origin: center center;
 }
 
