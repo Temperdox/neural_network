@@ -43,16 +43,24 @@ html {
   line-height: 1.6;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
   scroll-behavior: smooth;
-  /* Always show the scrollbar so layout never shifts horizontally when
-     switching between slides of different heights. */
-  overflow-y: scroll;
-  scrollbar-gutter: stable;
+  /* Hide scrollbar entirely (scrolling still works via keyboard / touch / wheel). */
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;        /* IE/old Edge */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;                   /* Chrome, Safari, Edge, Opera */
+  width: 0;
+  height: 0;
 }
 
 body {
   background: var(--bg-primary);
   min-height: 100vh;
   overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 /* Subtle radial gradient background for depth */
