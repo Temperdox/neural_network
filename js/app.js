@@ -904,7 +904,7 @@ function drawWeightHeatmap(canvas, weights) {
 function renderJsonSnippet(data) {
   // Render an abbreviated, syntax-highlighted view of the JSON
   const layerSizes = JSON.stringify(data.layerSizes);
-  const w0_0_preview = data.weights[0][0].slice(0, 4).map(v => v.toFixed(3)).join(', ');
+  const w0_preview = data.weights[0][0].slice(0, 4).map(v => v.toFixed(3)).join(', ');
   const w0_total = data.weights[0].length;
   const b0_preview = Array.from(data.biases[0]).slice(0, 4).map(v => v.toFixed(3)).join(', ');
   const b0_total = data.biases[0].length;
