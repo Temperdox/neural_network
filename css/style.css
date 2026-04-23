@@ -795,6 +795,29 @@ input[type="range"]:focus { outline: none; }
   transform-origin: center center;
 }
 
+/* Subtle top fade-strip on YouTube cards to mask the title bar that
+   the player insists on showing during initial load and pause states.
+   Uses a gradient fade so it blends with the page background instead of
+   reading as an ugly solid letterbox. The bottom controls bar is already
+   covered by the existing .why-card-overlay gradient (which is opaque at
+   its bottom edge). */
+.why-card.video-card[data-video-type="youtube"] .why-card-video::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 26, 0.95) 0%,
+    rgba(10, 10, 26, 0.7) 50%,
+    rgba(10, 10, 26, 0) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
 .why-card.video-card .why-card-video video {
   position: absolute;
   inset: 0;
