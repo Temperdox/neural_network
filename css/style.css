@@ -46,6 +46,10 @@ html {
   /* Hide scrollbar entirely (scrolling still works via keyboard / touch / wheel). */
   scrollbar-width: none;          /* Firefox */
   -ms-overflow-style: none;        /* IE/old Edge */
+  /* Tells the browser to render form controls (dropdowns, date pickers,
+     scrollbars) in dark theme. Critical for the native <select> popup
+     and option rows to look correct on this dark background. */
+  color-scheme: dark;
 }
 
 html::-webkit-scrollbar,
@@ -783,6 +787,36 @@ input[type="range"]:focus { outline: none; }
   overflow: hidden;
 }
 
+/* Mask strips inside the video container hide the YouTube title bar
+   (~50px at top) and the controls/branding (~50px at bottom). Solid colour
+   matched to the card background so they read as intentional letterboxing. */
+.why-card.video-card[data-video-type="youtube"] .why-card-video::before,
+.why-card.video-card[data-video-type="youtube"] .why-card-video::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: #0a0a1a;
+}
+.why-card.video-card[data-video-type="youtube"] .why-card-video::before {
+  top: 0;
+  height: 50px;
+}
+.why-card.video-card[data-video-type="youtube"] .why-card-video::after {
+  bottom: 0;
+  height: 50px;
+}
+
+/* Per-card horizontal zoom for videos that have built-in side letterboxing
+   (e.g. the Tesla autopilot footage). Driven by a data-zoom attribute on
+   the .why-card.video-card element via JS (sets --video-zoom). */
+.why-card.video-card .why-card-video iframe {
+  transform: translate(-50%, -50%) scale(var(--video-zoom, 1));
+  transform-origin: center center;
+}
+
 .why-card.video-card .why-card-video video {
   position: absolute;
   inset: 0;
@@ -1326,6 +1360,7 @@ input[type="range"]:focus { outline: none; }
   color: var(--text-primary);
   font-size: 0.8rem;
   transition: border-color 0.2s;
+  font-family: inherit;
 }
 
 .config-row input:focus,
@@ -1333,6 +1368,41 @@ input[type="range"]:focus { outline: none; }
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+}
+
+/* Custom dark-themed select with a chevron icon */
+.config-row select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding-right: 1.6rem;
+  background-color: rgba(255, 255, 255, 0.04);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'><path d='M1 1l4 4 4-4' stroke='%23a29bfe' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 9px 6px;
+  cursor: pointer;
+}
+
+/* Style the option rows themselves where the browser allows it (Firefox + Chromium with color-scheme: dark) */
+.config-row select option,
+.modal-body select option,
+select option {
+  background-color: #1a1a3e;
+  color: var(--text-primary);
+  padding: 0.4rem 0.6rem;
+}
+
+.config-row select option:checked,
+select option:checked {
+  background: linear-gradient(0deg, var(--accent) 0%, var(--accent) 100%);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.config-row select option:hover,
+select option:hover {
+  background-color: rgba(108, 92, 231, 0.4);
 }
 
 /* --- Buttons --- */
