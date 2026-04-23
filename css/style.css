@@ -43,8 +43,9 @@ html {
   line-height: 1.6;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
   scroll-behavior: smooth;
-  /* Always reserve space for the scrollbar so transitions/animations
-     don't cause layout shift when the scrollbar appears/disappears. */
+  /* Always show the scrollbar so layout never shifts horizontally when
+     switching between slides of different heights. */
+  overflow-y: scroll;
   scrollbar-gutter: stable;
 }
 
@@ -52,7 +53,6 @@ body {
   background: var(--bg-primary);
   min-height: 100vh;
   overflow-x: hidden;
-  overflow-y: scroll;
 }
 
 /* Subtle radial gradient background for depth */
@@ -705,7 +705,271 @@ body::before {
 }
 
 /* ============================================================
-   SLIDE 6: References
+   SLIDE 7: Training Data (MNIST samples)
+   ============================================================ */
+.data-layout,
+.model-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .data-layout,
+  .model-layout { grid-template-columns: 1fr; }
+}
+
+.data-left,
+.data-right,
+.model-left,
+.model-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--glass-shadow), var(--glass-inset);
+  padding: 1.25rem;
+}
+
+.digit-gallery {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.5rem;
+}
+
+@media (max-width: 1100px) {
+  .digit-gallery { grid-template-columns: repeat(4, 1fr); }
+}
+
+.digit-tile {
+  position: relative;
+  background: #000;
+  border: 2px solid var(--glass-border);
+  border-radius: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.digit-tile:hover {
+  border-color: var(--accent-glow);
+  transform: scale(1.05);
+}
+
+.digit-tile.active {
+  border-color: var(--positive);
+  box-shadow: 0 0 0 2px var(--positive), 0 0 16px rgba(0, 206, 201, 0.4);
+}
+
+.digit-tile canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.digit-tile-label {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 0.65rem;
+  color: var(--accent-glow);
+  font-weight: 700;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+  font-variant-numeric: tabular-nums;
+}
+
+.data-caption {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+}
+
+.pixel-grid-wrap {
+  display: flex;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 0.5rem;
+}
+
+.pixel-grid-wrap canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 420px;
+  aspect-ratio: 1 / 1;
+  image-rendering: pixelated;
+}
+
+.format-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.7rem 0.85rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+}
+
+.format-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.format-key {
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.72rem;
+}
+
+.format-val {
+  color: var(--text-primary);
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   SLIDE 8: Trained Model (weight visualization)
+   ============================================================ */
+.weight-grid-status {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.weight-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.4rem;
+}
+
+@media (max-width: 1100px) {
+  .weight-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.weight-tile {
+  background: #000;
+  border: 1px solid var(--glass-border);
+  border-radius: 4px;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.weight-tile:hover {
+  border-color: var(--accent-glow);
+  transform: scale(1.05);
+}
+
+.weight-tile canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.json-snippet {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 220px;
+}
+
+.json-snippet .jk { color: var(--accent-glow); }
+.json-snippet .jn { color: var(--positive); }
+.json-snippet .js { color: var(--activation); }
+.json-snippet .jp { color: var(--text-secondary); font-style: italic; }
+
+.model-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+}
+
+.model-stat {
+  padding: 0.5rem 0.7rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+}
+
+.model-stat-label {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.15rem;
+}
+
+.model-stat-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--positive);
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.model-explain {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.model-explain li {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.model-explain li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.65em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.model-explain code {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  color: var(--accent-glow);
+}
+
+.hl-pos { color: var(--positive); }
+
+/* ============================================================
+   SLIDE 9: References
    ============================================================ */
 .references-list {
   display: flex;
