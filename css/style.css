@@ -476,6 +476,98 @@ body::before {
   background: transparent;
 }
 
+/* ============================================================
+   Cross-browser range slider styling
+   Browsers ignore unrecognised pseudo-element selectors in a list,
+   so each engine's pseudo-elements are written in their own block.
+   ============================================================ */
+input[type="range"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  height: 22px;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  font: inherit;
+  accent-color: var(--accent);
+}
+
+/* WebKit / Blink (Chrome, Safari, Edge, Opera, Opera GX) */
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  /* --range-pct is set by JS to "<percent>%" so the track fills up to the thumb */
+  background:
+    linear-gradient(90deg, var(--accent), var(--accent-glow)) 0/var(--range-pct, 50%) 100% no-repeat,
+    rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--accent-glow), var(--accent) 70%);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 8px rgba(108, 92, 231, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.2);
+  margin-top: -7px;
+  cursor: grab;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 14px rgba(108, 92, 231, 0.75), 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+input[type="range"]::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.05);
+}
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.35), 0 4px 14px rgba(108, 92, 231, 0.7);
+}
+
+/* Firefox */
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+input[type="range"]::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-glow));
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--accent-glow), var(--accent) 70%);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 8px rgba(108, 92, 231, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.2);
+  cursor: grab;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.15);
+}
+input[type="range"]::-moz-range-thumb:active {
+  cursor: grabbing;
+}
+input[type="range"]:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.35), 0 4px 14px rgba(108, 92, 231, 0.7);
+}
+
+/* Disable default focus outline (we use a custom focus ring on the thumb) */
+input[type="range"]:focus { outline: none; }
+
 .act-btn {
   flex: 1;
   padding: 0.35rem 0.5rem;
@@ -1098,8 +1190,43 @@ body::before {
 }
 
 .demo-slide .slide-heading {
-  margin-bottom: 1rem;
+  margin-bottom: 0;
 }
+
+.demo-heading-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.howto-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.95rem;
+  background: rgba(108, 92, 231, 0.15);
+  border: 1px solid rgba(162, 155, 254, 0.35);
+  border-radius: 999px;
+  color: var(--accent-glow);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.howto-btn:hover {
+  background: var(--accent);
+  color: var(--text-primary);
+  border-color: var(--accent-glow);
+  box-shadow: 0 4px 14px rgba(108, 92, 231, 0.45);
+  transform: translateY(-1px);
+}
+
+.howto-btn i { font-size: 0.95rem; }
 
 .demo-layout {
   display: grid;
@@ -1757,6 +1884,132 @@ body::before {
 
 .modal-btn-cancel { flex: 1; }
 .modal-btn-load { flex: 1.5; }
+
+/* --- Larger modal variant for the How To Use dialog --- */
+.modal.modal-lg {
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.modal.modal-lg .modal-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+}
+
+.howto-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-bottom: 0.5rem;
+}
+
+.howto-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+  color: var(--accent-glow);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.howto-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(108, 92, 231, 0.4);
+}
+
+.howto-section p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 0.5rem;
+}
+
+.howto-section p:last-child { margin-bottom: 0; }
+
+.howto-section strong {
+  color: var(--text-primary);
+}
+
+.howto-section em {
+  color: var(--accent-glow);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.howto-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.howto-list li {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  padding-left: 1.4rem;
+  position: relative;
+}
+
+.howto-list li::before {
+  content: '';
+  position: absolute;
+  left: 0.4rem;
+  top: 0.65em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.howto-list.howto-links li::before {
+  background: var(--positive);
+}
+
+.howto-list a {
+  color: var(--accent-glow);
+  text-decoration: none;
+  word-break: break-word;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+}
+
+.howto-list a:hover {
+  color: var(--positive);
+  text-decoration: underline;
+}
+
+.howto-note {
+  font-size: 0.78rem !important;
+  font-style: italic;
+  color: var(--text-secondary);
+  opacity: 0.85;
+}
+
+.howto-note a {
+  color: var(--accent-glow);
+  text-decoration: none;
+}
+
+.howto-note a:hover {
+  text-decoration: underline;
+}
 
 /* === Scrollbar === */
 ::-webkit-scrollbar { width: 8px; height: 8px; }

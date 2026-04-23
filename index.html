@@ -321,7 +321,7 @@
         <div class="model-left">
           <div class="content-block">
             <h3>What the Network Learned</h3>
-            <p>Once trained, every connection holds a <strong>learned weight</strong>. Visualizing the 784 weights into each hidden neuron as a 28&times;28 grid shows which pixel patterns that neuron has learned to detect &mdash; bright = positive (excitatory), dark = negative (inhibitory).</p>
+            <p>Once trained, every connection holds a <strong>learned weight</strong>. Visualizing the 784 weights into each hidden neuron as a 28&times;28 grid shows which pixel patterns that neuron has learned to detect: bright = positive (excitatory), dark = negative (inhibitory).</p>
           </div>
           <div class="weight-grid-status" id="weight-grid-status">Loading trained model from GitHub...</div>
           <div class="weight-grid" id="weight-grid"></div>
@@ -368,7 +368,13 @@
   <!-- ===== SLIDE 8: Live Demo ===== -->
   <section class="slide" data-slide="7">
     <div class="slide-content demo-slide">
-      <h2 class="slide-heading"><span class="heading-tag">Live Demo</span>Neural Network Digit Recognition</h2>
+      <div class="demo-heading-row">
+        <h2 class="slide-heading"><span class="heading-tag">Live Demo</span>Neural Network Digit Recognition</h2>
+        <button id="howto-btn" class="howto-btn" type="button" aria-label="How to use this demo">
+          <i class="fa-solid fa-circle-question"></i>
+          <span>How to use</span>
+        </button>
+      </div>
 
       <div class="demo-layout">
         <div class="demo-left">
@@ -444,7 +450,6 @@
             </div>
             <div class="canvas-controls">
               <button id="clear-btn">Clear</button>
-              <button id="predict-btn" disabled>Predict</button>
             </div>
             <div class="prediction-result">
               <span class="label">Prediction:</span>
@@ -476,6 +481,72 @@
       </div>
     </div>
   </section>
+
+  <!-- ===== How To Use Modal ===== -->
+  <div class="modal-overlay hidden" id="howto-modal">
+    <div class="modal modal-lg" role="dialog" aria-labelledby="howto-modal-title" aria-modal="true">
+      <div class="modal-header">
+        <h3 id="howto-modal-title">How to use this demo</h3>
+        <button class="modal-close" id="howto-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body howto-body">
+
+        <section class="howto-section">
+          <h4><span class="howto-step-num">1</span>Recommended: Use the Pretrained Model</h4>
+          <p>The fastest way to try the demo is to load the pretrained model:</p>
+          <ol class="howto-list">
+            <li>Click <strong>Load URL</strong> in the Model panel.</li>
+            <li>In the popup, click the big <strong>Load Pretrained Model</strong> button.</li>
+            <li>Wait a moment for it to download (about ~3 MB).</li>
+          </ol>
+          <p class="howto-note">This skips training entirely and gets you straight to drawing digits and seeing predictions.</p>
+        </section>
+
+        <section class="howto-section">
+          <h4><span class="howto-step-num">2</span>Optional: Train Your Own Model</h4>
+          <p>If you'd rather train a network from scratch, configure these three settings first:</p>
+          <ul class="howto-list">
+            <li><strong>Epochs</strong>: how many full passes through the training data the network makes. More epochs typically improve accuracy but take longer. <em>10</em> is a sensible starting point.</li>
+            <li><strong>Learning rate</strong>: how big a step the network takes when adjusting weights after each batch. Too high (e.g. 1.0) and the model overshoots and fails to converge; too low (e.g. 0.0001) and training is painfully slow. <em>0.01</em> works well for this network.</li>
+            <li><strong>Batch size</strong>: how many training samples are processed before each weight update. Larger batches give smoother gradients but slower per-step learning. <em>32</em> is a common default.</li>
+          </ul>
+          <p>Click <strong>Train Model</strong> to start. The progress bar shows accuracy and loss as it goes; click <strong>Stop</strong> to abort early.</p>
+        </section>
+
+        <section class="howto-section">
+          <h4><span class="howto-step-num">3</span>About the Training Data</h4>
+          <p>You <em>cannot</em> upload your own training data. The demo automatically uses the standard <strong>MNIST handwritten digit dataset</strong> (60,000 training images and 10,000 test images), which is bundled with the site and loads instantly when you click Train.</p>
+          <p>For reference, the original MNIST files are available here:</p>
+          <ul class="howto-list howto-links">
+            <li><a href="https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz" target="_blank" rel="noopener">train-images-idx3-ubyte.gz</a>: 60,000 training images</li>
+            <li><a href="https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz" target="_blank" rel="noopener">train-labels-idx1-ubyte.gz</a>: corresponding labels</li>
+            <li><a href="https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz" target="_blank" rel="noopener">t10k-images-idx3-ubyte.gz</a>: 10,000 test images</li>
+            <li><a href="https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz" target="_blank" rel="noopener">t10k-labels-idx1-ubyte.gz</a>: corresponding labels</li>
+          </ul>
+          <p class="howto-note">The original homepage of MNIST: <a href="https://yann.lecun.com/exdb/mnist/" target="_blank" rel="noopener">yann.lecun.com/exdb/mnist</a>.</p>
+        </section>
+
+        <section class="howto-section">
+          <h4><span class="howto-step-num">4</span>Saving and Loading Models</h4>
+          <ul class="howto-list">
+            <li><strong>Save to File</strong>: downloads the currently loaded/trained model as a JSON file. Useful for keeping a model you've trained so you don't have to train again.</li>
+            <li><strong>Load File</strong>: loads a model from a JSON file on your computer (e.g. one you previously saved).</li>
+            <li><strong>Load URL</strong>: opens the popup with the pretrained model button and a custom URL field.</li>
+          </ul>
+        </section>
+
+        <section class="howto-section">
+          <h4><span class="howto-step-num">5</span>Try It Out</h4>
+          <p>Once a model is loaded or trained, just <strong>draw a digit (0&ndash;9) in the black canvas</strong> with your mouse or finger. The prediction and confidence appear instantly when you finish drawing, and the bar chart below shows how confident the network is in each digit.</p>
+          <p>Click <strong>Clear</strong> to wipe the canvas and try again.</p>
+        </section>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary modal-btn-load" id="howto-modal-ok">Got it</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ===== Load Model Modal ===== -->
   <div class="modal-overlay hidden" id="url-modal">

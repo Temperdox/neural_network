@@ -1004,7 +1004,7 @@ let modelTrained = false;
 let pendingFiles = null;
 let demoInitialized = false;
 
-let trainBtn, stopBtn, saveBtn, loadFileBtn, loadUrlBtn, predictBtn;
+let trainBtn, stopBtn, saveBtn, loadFileBtn, loadUrlBtn;
 let statusDot, statusText, modelInfo;
 let progressArea, progressFill, progressEpoch, progressAccuracy, progressLoss;
 let mnistPanel, fileStatus;
@@ -1021,7 +1021,6 @@ function initDemo() {
   saveBtn = document.getElementById('save-btn');
   loadFileBtn = document.getElementById('load-file-btn');
   loadUrlBtn = document.getElementById('load-url-btn');
-  predictBtn = document.getElementById('predict-btn');
   statusDot = document.querySelector('.status-dot');
   statusText = document.getElementById('status-text');
   modelInfo = document.getElementById('model-info');
@@ -1087,8 +1086,6 @@ function setupDemoControls() {
     visualizer.draw(network);
   });
 
-  predictBtn.addEventListener('click', predict);
-
   document.getElementById('draw-canvas').addEventListener('mouseup', () => {
     if (drawCanvas.hasDrawing && modelTrained) setTimeout(predict, 50);
   });
@@ -1147,7 +1144,6 @@ function updateButtons() {
   trainBtn.disabled = isTraining;
   stopBtn.disabled = !isTraining;
   saveBtn.disabled = !modelTrained || isTraining;
-  predictBtn.disabled = !modelTrained || isTraining;
   loadFileBtn.disabled = isTraining;
   loadUrlBtn.disabled = isTraining;
 }
@@ -1384,8 +1380,44 @@ function sleep(ms) {
 // ============================================================
 // Init
 // ============================================================
+function initRangeSliderFills() {
+  const sliders = document.querySelectorAll('input[type="range"]');
+  sliders.forEach(slider => {
+    const update = () => {
+      const min = parseFloat(slider.min) || 0;
+      const max = parseFloat(slider.max) || 100;
+      const val = parseFloat(slider.value);
+      const pct = ((val - min) / (max - min)) * 100;
+      slider.style.setProperty('--range-pct', pct + '%');
+    };
+    slider.addEventListener('input', update);
+    update();
+  });
+}
+
+function setupHowtoModal() {
+  const modal = document.getElementById('howto-modal');
+  const openBtn = document.getElementById('howto-btn');
+  const closeBtn = document.getElementById('howto-modal-close');
+  const okBtn = document.getElementById('howto-modal-ok');
+  if (!modal || !openBtn) return;
+
+  function open() { modal.classList.remove('hidden'); }
+  function close() { modal.classList.add('hidden'); }
+
+  openBtn.addEventListener('click', open);
+  closeBtn.addEventListener('click', close);
+  okBtn.addEventListener('click', close);
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden')) close();
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initSlides();
   drawStaticDiagram();
   initConceptDemos();
+  initRangeSliderFills();
+  setupHowtoModal();
 });
