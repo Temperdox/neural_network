@@ -787,31 +787,10 @@ input[type="range"]:focus { outline: none; }
   overflow: hidden;
 }
 
-/* Mask strips inside the video container hide the YouTube title bar
-   (~50px at top) and the controls/branding (~50px at bottom). Solid colour
-   matched to the card background so they read as intentional letterboxing. */
-.why-card.video-card[data-video-type="youtube"] .why-card-video::before,
-.why-card.video-card[data-video-type="youtube"] .why-card-video::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: #0a0a1a;
-}
-.why-card.video-card[data-video-type="youtube"] .why-card-video::before {
-  top: 0;
-  height: 50px;
-}
-.why-card.video-card[data-video-type="youtube"] .why-card-video::after {
-  bottom: 0;
-  height: 50px;
-}
-
-/* Per-card horizontal zoom for videos that have built-in side letterboxing
-   (e.g. the Tesla autopilot footage). Driven by a data-zoom attribute on
-   the .why-card.video-card element via JS (sets --video-zoom). */
+/* Per-card uniform zoom for videos with built-in letterboxing inside the
+   source footage (e.g. the Tesla autopilot clip). Driven by a data-zoom
+   attribute set via JS as the --video-zoom custom property. Aspect ratio
+   is preserved because scale() applies uniformly to both axes. */
 .why-card.video-card .why-card-video iframe {
   transform: translate(-50%, -50%) scale(var(--video-zoom, 1));
   transform-origin: center center;
