@@ -730,12 +730,6 @@ function initVideoCards(slide) {
       iframe.title = 'Video';
       iframe.addEventListener('load', () => iframe.classList.add('loaded'));
       container.appendChild(iframe);
-
-      // Apply optional per-card zoom (e.g. videos with built-in side letterboxing)
-      const zoom = parseFloat(card.dataset.zoom);
-      if (!isNaN(zoom) && zoom !== 1) {
-        iframe.style.setProperty('--video-zoom', String(zoom));
-      }
     }
   });
 }
