@@ -14,6 +14,8 @@ module.exports = merge(common, {
       patterns: [
         { from: 'css', to: 'css' },
         { from: 'minst weights', to: 'mnist', noErrorOnMissing: true },
+        { from: 'img/Cybersecurity-web.mp4', to: 'img/Cybersecurity-web.mp4', noErrorOnMissing: true },
+        { from: 'img/Pharma-web.mp4', to: 'img/Pharma-web.mp4', noErrorOnMissing: true },
         { from: 'favicon.ico', to: 'favicon.ico', noErrorOnMissing: true },
         { from: 'icon.svg', to: 'icon.svg', noErrorOnMissing: true },
         { from: 'icon.png', to: 'icon.png', noErrorOnMissing: true },

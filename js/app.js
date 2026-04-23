@@ -67,6 +67,7 @@ function goToSlide(idx) {
   if (slide) {
     if (slide.querySelector('#digit-gallery') && !trainingDataInitialized) initTrainingDataSlide();
     if (slide.querySelector('#weight-grid') && !modelSlideInitialized) initModelSlide();
+    if (slide.querySelector('.why-card.video-card')) initVideoCards(slide);
   }
 }
 
@@ -672,6 +673,63 @@ function hexWithAlpha(hex, alpha) {
   const g = parseInt(h.slice(2, 4), 16);
   const b = parseInt(h.slice(4, 6), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// ============================================================
+// Why Slide Video Cards (lazy-load on first reveal)
+// ============================================================
+const initializedVideoCards = new WeakSet();
+
+function initVideoCards(slide) {
+  const cards = slide.querySelectorAll('.why-card.video-card');
+  cards.forEach(card => {
+    if (initializedVideoCards.has(card)) return;
+    initializedVideoCards.add(card);
+
+    const container = card.querySelector('.why-card-video');
+    if (!container) return;
+    const type = card.dataset.videoType;
+
+    if (type === 'local') {
+      const src = card.dataset.videoSrc;
+      const v = document.createElement('video');
+      v.src = src;
+      v.muted = true;
+      v.loop = true;
+      v.autoplay = true;
+      v.playsInline = true;
+      v.preload = 'auto';
+      v.setAttribute('disablepictureinpicture', '');
+      v.addEventListener('loadeddata', () => v.classList.add('loaded'));
+      container.appendChild(v);
+      // Some browsers require an explicit play() call after element is in DOM
+      v.play().catch(() => { /* autoplay blocked - will need user interaction */ });
+    } else if (type === 'youtube') {
+      const id = card.dataset.videoId;
+      const iframe = document.createElement('iframe');
+      const params = new URLSearchParams({
+        autoplay: '1',
+        mute: '1',
+        loop: '1',
+        playlist: id,        // Required for loop to work
+        controls: '0',
+        modestbranding: '1',
+        showinfo: '0',
+        rel: '0',
+        iv_load_policy: '3',
+        playsinline: '1',
+        disablekb: '1',
+        fs: '0',
+      });
+      iframe.src = `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
+      iframe.allow = 'autoplay; encrypted-media';
+      iframe.setAttribute('frameborder', '0');
+      iframe.setAttribute('allowfullscreen', '');
+      iframe.title = 'Video';
+      iframe.addEventListener('load', () => iframe.classList.add('loaded'));
+      container.appendChild(iframe);
+    }
+  });
 }
 
 // ============================================================
