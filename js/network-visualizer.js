@@ -35,8 +35,11 @@ export class NetworkVisualizer {
     const wrapper = this.canvas.parentElement;
     const rect = wrapper.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    const width = rect.width;
-    const height = Math.max(480, rect.height);
+    const width = Math.max(rect.width, 1);
+    // Scale height with viewport so the visualization isn't artificially tall
+    // on small screens (was previously hardcoded to 480px minimum).
+    const minH = window.innerWidth < 480 ? 280 : window.innerWidth < 768 ? 360 : 420;
+    const height = Math.max(minH, rect.height);
 
     this.canvas.width = width * dpr;
     this.canvas.height = height * dpr;

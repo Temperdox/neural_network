@@ -3,7 +3,7 @@ import { NetworkVisualizer } from './network-visualizer.js';
 import { DrawingCanvas } from './drawing-canvas.js';
 import {
   tryAutoLoad, loadFromFiles, getTrainingBatch, evaluateTestSet,
-  isLoaded, DOWNLOAD_URLS
+  isLoaded, DOWNLOAD_URLS, loadTestSamples
 } from './mnist-data.js';
 
 // ============================================================
@@ -60,6 +60,13 @@ function goToSlide(idx) {
   // Resize visualizer when switching to demo slide
   if (currentSlide === totalSlides - 1 && visualizer) {
     setTimeout(() => { visualizer.resize(); visualizer.draw(network); }, 50);
+  }
+
+  // Lazy-init the new content slides
+  const slide = document.querySelectorAll('.slide')[currentSlide];
+  if (slide) {
+    if (slide.querySelector('#digit-gallery') && !trainingDataInitialized) initTrainingDataSlide();
+    if (slide.querySelector('#weight-grid') && !modelSlideInitialized) initModelSlide();
   }
 }
 
@@ -210,6 +217,16 @@ function initConceptDemos() {
     requestAnimationFrame(animate);
   }
   requestAnimationFrame(animate);
+
+  // Redraw the non-animated demos when the window resizes
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      drawBiasDemo();
+      drawActivationDemo();
+    }, 100);
+  });
 }
 
 function updateCombinedDemo() {
@@ -658,7 +675,267 @@ function hexWithAlpha(hex, alpha) {
 }
 
 // ============================================================
-// Live Demo (Slide 8)
+// Training Data Slide (Slide 7)
+// ============================================================
+let trainingDataInitialized = false;
+let trainingDataSamples = null;
+let selectedSampleIdx = 0;
+
+async function initTrainingDataSlide() {
+  if (trainingDataInitialized) return;
+  trainingDataInitialized = true;
+
+  const gallery = document.getElementById('digit-gallery');
+  const pixelCanvas = document.getElementById('pixel-grid-canvas');
+  const labelEl = document.getElementById('selected-digit-label');
+  if (!gallery || !pixelCanvas) return;
+
+  gallery.innerHTML = '<div class="weight-grid-status">Loading MNIST samples...</div>';
+
+  try {
+    trainingDataSamples = await loadTestSamples(12);
+  } catch (e) {
+    gallery.innerHTML = `<div class="weight-grid-status">Failed to load samples: ${e.message}</div>`;
+    return;
+  }
+
+  gallery.innerHTML = '';
+  trainingDataSamples.forEach((sample, idx) => {
+    const tile = document.createElement('div');
+    tile.className = 'digit-tile' + (idx === selectedSampleIdx ? ' active' : '');
+    tile.innerHTML = `
+      <canvas width="28" height="28"></canvas>
+      <span class="digit-tile-label">${sample.label}</span>
+    `;
+    const c = tile.querySelector('canvas');
+    drawPixelArray(c, sample.pixels, 28, 28, false);
+    tile.addEventListener('click', () => {
+      selectedSampleIdx = idx;
+      gallery.querySelectorAll('.digit-tile').forEach((t, i) => {
+        t.classList.toggle('active', i === idx);
+      });
+      drawPixelGridDetail(pixelCanvas, sample);
+      if (labelEl) labelEl.textContent = `digit "${sample.label}"`;
+    });
+    gallery.appendChild(tile);
+  });
+
+  // Initial detail draw
+  if (trainingDataSamples.length > 0) {
+    drawPixelGridDetail(pixelCanvas, trainingDataSamples[0]);
+    if (labelEl) labelEl.textContent = `digit "${trainingDataSamples[0].label}"`;
+  }
+}
+
+function drawPixelArray(canvas, pixels, w, h, invert) {
+  const ctx = canvas.getContext('2d');
+  const imageData = ctx.createImageData(w, h);
+  for (let i = 0; i < pixels.length; i++) {
+    const v = invert ? (1 - pixels[i]) : pixels[i];
+    const px = Math.round(v * 255);
+    imageData.data[i * 4] = px;
+    imageData.data[i * 4 + 1] = px;
+    imageData.data[i * 4 + 2] = px;
+    imageData.data[i * 4 + 3] = 255;
+  }
+  ctx.putImageData(imageData, 0, 0);
+}
+
+function drawPixelGridDetail(canvas, sample) {
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth || 420;
+  const cssH = canvas.clientHeight || 420;
+  canvas.width = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, cssW, cssH);
+
+  const cellW = cssW / 28;
+  const cellH = cssH / 28;
+  const showText = cellW > 13;
+
+  for (let y = 0; y < 28; y++) {
+    for (let x = 0; x < 28; x++) {
+      const v = sample.pixels[y * 28 + x];
+      const px = Math.round(v * 255);
+      ctx.fillStyle = `rgb(${px},${px},${px})`;
+      ctx.fillRect(x * cellW, y * cellH, cellW, cellH);
+
+      if (showText && v > 0.05) {
+        // Show numeric value (0-99) on lighter pixels
+        ctx.fillStyle = v > 0.5 ? '#000' : '#a29bfe';
+        ctx.font = `${Math.min(cellW * 0.42, 10)}px ui-monospace, monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const display = Math.round(v * 99);
+        ctx.fillText(String(display), x * cellW + cellW / 2, y * cellH + cellH / 2);
+      }
+    }
+  }
+
+  // Subtle grid lines
+  ctx.strokeStyle = 'rgba(108, 92, 231, 0.15)';
+  ctx.lineWidth = 0.5;
+  for (let i = 1; i < 28; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * cellW, 0);
+    ctx.lineTo(i * cellW, cssH);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, i * cellH);
+    ctx.lineTo(cssW, i * cellH);
+    ctx.stroke();
+  }
+}
+
+// ============================================================
+// Trained Model Slide (Slide 8)
+// ============================================================
+let modelSlideInitialized = false;
+
+async function initModelSlide() {
+  if (modelSlideInitialized) return;
+  modelSlideInitialized = true;
+
+  const status = document.getElementById('weight-grid-status');
+  const grid = document.getElementById('weight-grid');
+  const snippet = document.getElementById('json-snippet');
+  const stats = document.getElementById('model-stats');
+  const paramCount = document.getElementById('param-count');
+  if (!status || !grid || !snippet) return;
+
+  try {
+    status.textContent = 'Fetching mnist-model-1776705741158.json...';
+    const resp = await fetch(PRETRAINED_MODEL_URL);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const text = await resp.text();
+    const data = JSON.parse(text);
+
+    // Render weight tiles for first 12 hidden-layer-1 neurons
+    status.classList.add('hidden');
+    grid.innerHTML = '';
+    const firstLayerWeights = data.weights[0]; // [128][784]
+    const tileCount = Math.min(12, firstLayerWeights.length);
+
+    for (let i = 0; i < tileCount; i++) {
+      const tile = document.createElement('div');
+      tile.className = 'weight-tile';
+      tile.title = `Hidden layer 1, neuron ${i}`;
+      const c = document.createElement('canvas');
+      c.width = 28;
+      c.height = 28;
+      tile.appendChild(c);
+      drawWeightHeatmap(c, firstLayerWeights[i]);
+      grid.appendChild(tile);
+    }
+
+    // Compute stats
+    let totalWeights = 0, totalBiases = 0;
+    for (const layer of data.weights) {
+      for (const row of layer) totalWeights += row.length;
+    }
+    for (const b of data.biases) totalBiases += b.length;
+    const totalParams = totalWeights + totalBiases;
+
+    if (paramCount) paramCount.textContent = totalParams.toLocaleString();
+
+    // Render JSON snippet (truncated)
+    snippet.innerHTML = renderJsonSnippet(data);
+
+    // Render stat tiles
+    if (stats) {
+      stats.innerHTML = `
+        <div class="model-stat">
+          <span class="model-stat-label">Architecture</span>
+          <span class="model-stat-value">${data.layerSizes.join(' → ')}</span>
+        </div>
+        <div class="model-stat">
+          <span class="model-stat-label">Total Parameters</span>
+          <span class="model-stat-value">${totalParams.toLocaleString()}</span>
+        </div>
+        <div class="model-stat">
+          <span class="model-stat-label">Weights</span>
+          <span class="model-stat-value">${totalWeights.toLocaleString()}</span>
+        </div>
+        <div class="model-stat">
+          <span class="model-stat-label">Biases</span>
+          <span class="model-stat-value">${totalBiases.toLocaleString()}</span>
+        </div>
+      `;
+    }
+  } catch (e) {
+    status.textContent = `Failed to load model: ${e.message}`;
+    snippet.textContent = `Error: ${e.message}`;
+  }
+}
+
+function drawWeightHeatmap(canvas, weights) {
+  // weights: array of 784 floats. Map to 28x28 with diverging colormap (red = neg, cyan = pos).
+  const ctx = canvas.getContext('2d');
+  const imageData = ctx.createImageData(28, 28);
+  // Find max abs value for normalization
+  let maxAbs = 0.001;
+  for (const w of weights) maxAbs = Math.max(maxAbs, Math.abs(w));
+  for (let i = 0; i < 784; i++) {
+    const v = weights[i] / maxAbs; // -1 to 1
+    let r, g, b;
+    if (v >= 0) {
+      // Positive: black to cyan
+      r = 0;
+      g = Math.round(206 * v);
+      b = Math.round(201 * v);
+    } else {
+      // Negative: black to red
+      r = Math.round(255 * -v);
+      g = Math.round(107 * -v);
+      b = Math.round(107 * -v);
+    }
+    imageData.data[i * 4] = r;
+    imageData.data[i * 4 + 1] = g;
+    imageData.data[i * 4 + 2] = b;
+    imageData.data[i * 4 + 3] = 255;
+  }
+  ctx.putImageData(imageData, 0, 0);
+}
+
+function renderJsonSnippet(data) {
+  // Render an abbreviated, syntax-highlighted view of the JSON
+  const layerSizes = JSON.stringify(data.layerSizes);
+  const w0_0_preview = data.weights[0][0].slice(0, 4).map(v => v.toFixed(3)).join(', ');
+  const w0_total = data.weights[0].length;
+  const b0_preview = Array.from(data.biases[0]).slice(0, 4).map(v => v.toFixed(3)).join(', ');
+  const b0_total = data.biases[0].length;
+
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  return [
+    '{',
+    `  <span class="jk">"layerSizes"</span>: <span class="jn">${esc(layerSizes)}</span>,`,
+    `  <span class="jk">"weights"</span>: [`,
+    `    <span class="jp">// layer 0: ${w0_total} neurons × 784 inputs</span>`,
+    `    [`,
+    `      [<span class="jn">${esc(w0_preview)}</span>, <span class="jp">... 780 more</span>],`,
+    `      <span class="jp">// ... ${w0_total - 1} more rows</span>`,
+    `    ],`,
+    `    <span class="jp">// layer 1: 64 neurons × 128 inputs</span>`,
+    `    [<span class="jp">...</span>],`,
+    `    <span class="jp">// layer 2: 10 neurons × 64 inputs</span>`,
+    `    [<span class="jp">...</span>]`,
+    `  ],`,
+    `  <span class="jk">"biases"</span>: [`,
+    `    [<span class="jn">${esc(b0_preview)}</span>, <span class="jp">... ${b0_total - 4} more</span>],`,
+    `    [<span class="jp">... 64 values</span>],`,
+    `    [<span class="jp">... 10 values</span>]`,
+    `  ]`,
+    '}'
+  ].join('\n');
+}
+
+// ============================================================
+// Live Demo (Slide 9)
 // ============================================================
 let network = null;
 let drawCanvas = null;
@@ -735,7 +1012,8 @@ function setupDemoControls() {
   stopBtn.addEventListener('click', () => { stopRequested = true; });
   saveBtn.addEventListener('click', saveModelToFile);
   loadFileBtn.addEventListener('click', () => document.getElementById('model-file-input').click());
-  loadUrlBtn.addEventListener('click', loadModelFromUrl);
+  loadUrlBtn.addEventListener('click', openUrlModal);
+  setupUrlModal();
 
   document.getElementById('model-file-input').addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -934,24 +1212,87 @@ async function loadModelFromFile(file) {
   }
 }
 
-async function loadModelFromUrl() {
-  const url = prompt('Enter URL to model .json file:\n(e.g. GitHub raw link)');
-  if (!url || !url.trim()) return;
+const PRETRAINED_MODEL_URL = 'https://raw.githubusercontent.com/Temperdox/neural_network/refs/heads/master/mnist-model-1776705741158.json';
+
+let urlModalSetup = false;
+function setupUrlModal() {
+  if (urlModalSetup) return;
+  urlModalSetup = true;
+
+  const modal = document.getElementById('url-modal');
+  const closeBtn = document.getElementById('url-modal-close');
+  const cancelBtn = document.getElementById('url-modal-cancel');
+  const loadBtn = document.getElementById('url-modal-load');
+  const pretrainedBtn = document.getElementById('load-pretrained-btn');
+  const input = document.getElementById('modal-url-input');
+  const errorEl = document.getElementById('modal-error');
+  if (!modal) return;
+
+  function close() {
+    modal.classList.add('hidden');
+    errorEl.classList.add('hidden');
+    errorEl.textContent = '';
+    input.value = '';
+  }
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.classList.remove('hidden');
+  }
+
+  closeBtn.addEventListener('click', close);
+  cancelBtn.addEventListener('click', close);
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden')) close();
+  });
+
+  pretrainedBtn.addEventListener('click', async () => {
+    const ok = await loadModelFromUrlString(PRETRAINED_MODEL_URL, 'pretrained model', showError);
+    if (ok) close();
+  });
+
+  loadBtn.addEventListener('click', async () => {
+    const url = input.value.trim();
+    if (!url) { showError('Please enter a URL.'); return; }
+    const ok = await loadModelFromUrlString(url, 'model', showError);
+    if (ok) close();
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') loadBtn.click();
+  });
+}
+
+function openUrlModal() {
+  setupUrlModal();
+  const modal = document.getElementById('url-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  setTimeout(() => {
+    const input = document.getElementById('modal-url-input');
+    if (input) input.focus();
+  }, 50);
+}
+
+async function loadModelFromUrlString(url, label, onError) {
   try {
     modelInfo.textContent = 'Downloading...';
-    setStatus('training', 'Downloading model...');
-    const resp = await fetch(url.trim());
+    setStatus('training', `Downloading ${label}...`);
+    const resp = await fetch(url);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const text = await resp.text();
     network = NeuralNetwork.deserialize(text);
     modelTrained = true;
-    setStatus('trained', 'Model loaded from URL');
-    modelInfo.textContent = 'Loaded from URL';
+    setStatus('trained', `Loaded ${label}`);
+    modelInfo.textContent = `Loaded: ${label}`;
     updateButtons();
     visualizer.draw(network);
+    return true;
   } catch (e) {
     setStatus('untrained', 'Load failed');
     modelInfo.textContent = 'Failed: ' + e.message;
+    if (onError) onError('Load failed: ' + e.message);
+    return false;
   }
 }
 

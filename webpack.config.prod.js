@@ -13,6 +13,7 @@ module.exports = merge(common, {
     new CopyPlugin({
       patterns: [
         { from: 'css', to: 'css' },
+        { from: 'minst weights', to: 'mnist', noErrorOnMissing: true },
         { from: 'favicon.ico', to: 'favicon.ico', noErrorOnMissing: true },
         { from: 'icon.svg', to: 'icon.svg', noErrorOnMissing: true },
         { from: 'icon.png', to: 'icon.png', noErrorOnMissing: true },

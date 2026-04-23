@@ -13,10 +13,13 @@
 
 // Multiple mirrors to try in order
 const MIRRORS = [
-  // GitHub-hosted raw mirrors tend to have CORS
+  // Local copy bundled with the deploy (no CORS, fastest)
   {
-    trainImages: 'https://raw.githubusercontent.com/lorenmh/mnist_handwritten_json/master/mnist_handwritten_train.json',
-    type: 'json'
+    trainImages: './mnist/train-images-idx3-ubyte.gz',
+    trainLabels: './mnist/train-labels-idx1-ubyte.gz',
+    testImages: './mnist/t10k-images-idx3-ubyte.gz',
+    testLabels: './mnist/t10k-labels-idx1-ubyte.gz',
+    type: 'idx'
   },
   // Direct S3 (often blocked by CORS from localhost)
   {
@@ -130,8 +133,7 @@ async function fetchWithTimeout(url, timeoutMs = 10000) {
 
 // --- Auto-download attempts ---
 
-async function tryFetchIdx(onProgress) {
-  const mirror = MIRRORS[1]; // idx mirror
+async function tryFetchIdxFromMirror(mirror, onProgress) {
   onProgress('Downloading MNIST training images...');
   const trainImgResp = await fetchWithTimeout(mirror.trainImages, 30000);
   const trainImgBuf = await decompressGzip(await trainImgResp.arrayBuffer());
@@ -156,19 +158,74 @@ async function tryFetchIdx(onProgress) {
 }
 
 /**
- * Try to auto-download MNIST. Returns true if successful, false if CORS blocked.
+ * Try to auto-download MNIST. Returns true if successful, false if all mirrors blocked.
  */
 export async function tryAutoLoad(onProgress) {
   if (trainImages) return true;
 
-  try {
-    await tryFetchIdx(onProgress);
-    console.log(`MNIST loaded: ${trainImages.length} train, ${testImages.length} test`);
-    return true;
-  } catch (e) {
-    console.warn('Auto-download failed:', e.message);
-    return false;
+  for (let i = 0; i < MIRRORS.length; i++) {
+    const mirror = MIRRORS[i];
+    if (mirror.type !== 'idx') continue;
+    try {
+      await tryFetchIdxFromMirror(mirror, onProgress);
+      console.log(`MNIST loaded from mirror ${i}: ${trainImages.length} train, ${testImages.length} test`);
+      return true;
+    } catch (e) {
+      console.warn(`Mirror ${i} failed:`, e.message);
+    }
   }
+  return false;
+}
+
+/**
+ * Lazy-load just the test set (much smaller: ~1.6 MB) for use in
+ * the static "training data" presentation slide. Returns an array of
+ * { pixels: Float32Array(784), label: Number } objects.
+ */
+let _testSamplesCache = null;
+export async function loadTestSamples(count = 12) {
+  if (_testSamplesCache && _testSamplesCache.length >= count) {
+    return _testSamplesCache.slice(0, count);
+  }
+  if (testImages && testLabels) {
+    return _bundleSamples(count);
+  }
+  // Try local first, then S3
+  for (const mirror of MIRRORS) {
+    if (mirror.type !== 'idx') continue;
+    try {
+      const imgResp = await fetchWithTimeout(mirror.testImages, 20000);
+      const lblResp = await fetchWithTimeout(mirror.testLabels, 10000);
+      const imgBuf = await decompressGzip(await imgResp.arrayBuffer());
+      const lblBuf = await decompressGzip(await lblResp.arrayBuffer());
+      testImages = parseImages(imgBuf);
+      testLabels = parseLabels(lblBuf);
+      return _bundleSamples(count);
+    } catch (e) {
+      console.warn('Test sample mirror failed:', e.message);
+    }
+  }
+  throw new Error('Could not load MNIST test samples from any mirror');
+}
+
+function _bundleSamples(count) {
+  // Pick samples that cover all 10 digit classes
+  const seen = new Set();
+  const result = [];
+  for (let i = 0; i < testImages.length && result.length < count; i++) {
+    const lbl = testLabels[i];
+    if (seen.size < 10 && seen.has(lbl)) continue;
+    seen.add(lbl);
+    result.push({ pixels: testImages[i], label: lbl, index: i });
+  }
+  // Pad with extras if we asked for more than 10
+  for (let i = 0; i < testImages.length && result.length < count; i++) {
+    if (!result.find(r => r.index === i)) {
+      result.push({ pixels: testImages[i], label: testLabels[i], index: i });
+    }
+  }
+  _testSamplesCache = result;
+  return result;
 }
 
 /**

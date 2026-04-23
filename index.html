@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Neural Networks - Presentation</title>
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
   <link rel="stylesheet" href="css/style.css?v=<%= Date.now() %>">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
   <meta name="description" content="Neural Networks Memo Presentation with Live Demo">
@@ -264,8 +265,79 @@
     </div>
   </section>
 
-  <!-- ===== SLIDE 7: References ===== -->
+  <!-- ===== SLIDE 7: Training Data ===== -->
   <section class="slide" data-slide="6">
+    <div class="slide-content">
+      <h2 class="slide-heading"><span class="heading-tag">Data</span>Inside the Training Data</h2>
+      <div class="data-layout">
+        <div class="data-left">
+          <div class="content-block">
+            <h3>What MNIST Looks Like</h3>
+            <p>Each MNIST sample is a 28&times;28 grayscale image of a handwritten digit (0&ndash;9). The training set contains <strong>60,000</strong> images; the test set contains <strong>10,000</strong>.</p>
+          </div>
+          <div class="digit-gallery" id="digit-gallery"></div>
+          <p class="data-caption">Sample digits rendered from raw pixel arrays. Click any digit to inspect its 28&times;28 pixel grid.</p>
+        </div>
+        <div class="data-right">
+          <div class="content-block">
+            <h3>The Pixel Grid</h3>
+            <p>Behind each image is a 784-value array (28 rows &times; 28 columns). Each value is a brightness from <strong>0</strong> (black) to <strong>1</strong> (white). The network treats this flat array as its 784 input neurons.</p>
+          </div>
+          <div class="pixel-grid-wrap">
+            <canvas id="pixel-grid-canvas" width="420" height="420"></canvas>
+          </div>
+          <div class="content-block">
+            <h3>The Label</h3>
+            <p>Each image is paired with a single byte (0&ndash;9) telling the network what digit it represents. During training this becomes a <em>one-hot</em> vector: e.g. label "7" becomes <code>[0,0,0,0,0,0,0,1,0,0]</code>, which is the target output for the 10 output neurons.</p>
+          </div>
+          <div class="format-block">
+            <div class="format-row"><span class="format-key">Format</span><span class="format-val">IDX (binary)</span></div>
+            <div class="format-row"><span class="format-key">Image size</span><span class="format-val">28 &times; 28 = 784 bytes</span></div>
+            <div class="format-row"><span class="format-key">Train images file</span><span class="format-val">~47 MB uncompressed</span></div>
+            <div class="format-row"><span class="format-key">Currently selected</span><span class="format-val" id="selected-digit-label">digit "0"</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 8: Trained Model ===== -->
+  <section class="slide" data-slide="7">
+    <div class="slide-content">
+      <h2 class="slide-heading"><span class="heading-tag">Model</span>Inside a Trained Model</h2>
+      <div class="model-layout">
+        <div class="model-left">
+          <div class="content-block">
+            <h3>What the Network Learned</h3>
+            <p>Once trained, every connection holds a <strong>learned weight</strong>. Visualizing the 784 weights into each hidden neuron as a 28&times;28 grid shows which pixel patterns that neuron has learned to detect &mdash; bright = positive (excitatory), dark = negative (inhibitory).</p>
+          </div>
+          <div class="weight-grid-status" id="weight-grid-status">Loading trained model from GitHub...</div>
+          <div class="weight-grid" id="weight-grid"></div>
+          <p class="data-caption">First-layer neurons. Each tile is one neuron's 784 weights reshaped into a 28&times;28 image.</p>
+        </div>
+        <div class="model-right">
+          <div class="content-block">
+            <h3>JSON Structure</h3>
+            <p>The model is serialized as a single JSON file containing three keys:</p>
+          </div>
+          <pre class="json-snippet" id="json-snippet">Loading...</pre>
+          <div class="model-stats" id="model-stats"></div>
+          <div class="content-block">
+            <h3>What the Numbers Mean</h3>
+            <ul class="model-explain">
+              <li><strong class="hl-pos">layerSizes</strong>: list of neuron counts per layer. <code>[784, 128, 64, 10]</code> means 784 inputs, two hidden layers, 10 outputs.</li>
+              <li><strong class="hl-pos">weights[L][j][k]</strong>: the strength of the connection from neuron <em>k</em> in layer <em>L</em> to neuron <em>j</em> in layer <em>L+1</em>.</li>
+              <li><strong class="hl-pos">biases[L][j]</strong>: the constant added to neuron <em>j</em> in layer <em>L+1</em> before activation.</li>
+              <li>This file: <strong id="param-count">~109,000</strong> learned numbers in total.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 9: References ===== -->
+  <section class="slide" data-slide="8">
     <div class="slide-content">
       <h2 class="slide-heading"><span class="heading-tag">Sources</span>References</h2>
       <div class="references-list">
@@ -392,6 +464,30 @@
       </div>
     </div>
   </section>
+
+  <!-- ===== Load Model Modal ===== -->
+  <div class="modal-overlay hidden" id="url-modal">
+    <div class="modal" role="dialog" aria-labelledby="url-modal-title" aria-modal="true">
+      <div class="modal-header">
+        <h3 id="url-modal-title">Load Model</h3>
+        <button class="modal-close" id="url-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Quickly load the pretrained MNIST model, or paste a URL to your own model JSON file.</p>
+        <button id="load-pretrained-btn" class="btn-primary modal-pretrained-btn">
+          <i class="fa-solid fa-bolt"></i> Load Pretrained Model
+        </button>
+        <div class="modal-divider"><span>or</span></div>
+        <label for="modal-url-input">Custom URL:</label>
+        <input type="text" id="modal-url-input" placeholder="https://example.com/model.json" autocomplete="off">
+        <p class="modal-error hidden" id="modal-error"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary modal-btn-cancel" id="url-modal-cancel">Cancel</button>
+        <button class="btn-primary modal-btn-load" id="url-modal-load">Load URL</button>
+      </div>
+    </div>
+  </div>
 
   <!-- script injected by HtmlWebpackPlugin -->
 </body>
