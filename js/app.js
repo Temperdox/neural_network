@@ -680,6 +680,59 @@ function hexWithAlpha(hex, alpha) {
 // ============================================================
 const initializedVideoCards = new WeakSet();
 
+// YouTube IFrame API loader + attacher. Ensures that the videos actually
+// start playing (and restart after any pause), because URL parameters
+// alone aren't a reliable way to keep YouTube's chrome fully suppressed.
+let _ytApiLoading = false;
+const _ytPendingIframes = [];
+
+function loadYouTubeAPI() {
+  if (_ytApiLoading) return;
+  _ytApiLoading = true;
+  const tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  tag.async = true;
+  document.head.appendChild(tag);
+}
+
+window.onYouTubeIframeAPIReady = function () {
+  while (_ytPendingIframes.length) {
+    const iframe = _ytPendingIframes.shift();
+    _createYTPlayer(iframe);
+  }
+};
+
+function _createYTPlayer(iframe) {
+  try {
+    new window.YT.Player(iframe, {
+      events: {
+        onReady: (e) => {
+          try { e.target.mute(); } catch (_) {}
+          try { e.target.playVideo(); } catch (_) {}
+        },
+        onStateChange: (e) => {
+          // State 2 = paused, 0 = ended, -1 = unstarted, 5 = cued.
+          // If the player drops out of playing, push it back.
+          if (e.data === 2 || e.data === 0) {
+            try { e.target.playVideo(); } catch (_) {}
+          }
+        },
+      },
+    });
+  } catch (err) {
+    console.warn('YouTube player setup failed:', err);
+  }
+}
+
+function attachYouTubePlayer(iframe) {
+  loadYouTubeAPI();
+  if (window.YT && window.YT.Player) {
+    _createYTPlayer(iframe);
+  } else {
+    _ytPendingIframes.push(iframe);
+  }
+}
+
 function initVideoCards(slide) {
   const cards = slide.querySelectorAll('.why-card.video-card');
   cards.forEach(card => {
@@ -722,6 +775,8 @@ function initVideoCards(slide) {
         fs: '0',                // Disable fullscreen button
         cc_load_policy: '0',    // Don't auto-show captions
         autohide: '1',          // Hide controls after a few seconds (legacy)
+        enablejsapi: '1',       // Required for IFrame Player API control
+        origin: window.location.origin,
       });
       iframe.src = `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
       iframe.allow = 'autoplay; encrypted-media';
@@ -730,6 +785,7 @@ function initVideoCards(slide) {
       iframe.title = 'Video';
       iframe.addEventListener('load', () => iframe.classList.add('loaded'));
       container.appendChild(iframe);
+      attachYouTubePlayer(iframe);
     }
   });
 }
