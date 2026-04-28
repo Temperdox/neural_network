@@ -67,7 +67,6 @@ function goToSlide(idx) {
   if (slide) {
     if (slide.querySelector('#digit-gallery') && !trainingDataInitialized) initTrainingDataSlide();
     if (slide.querySelector('#weight-grid') && !modelSlideInitialized) initModelSlide();
-    if (slide.querySelector('.why-card.video-card')) initVideoCards(slide);
   }
 }
 
@@ -711,6 +710,10 @@ function _createYTPlayer(iframe) {
           try { e.target.playVideo(); } catch (_) {}
         },
         onStateChange: (e) => {
+          // State 1 = playing. This is when we reveal the iframe to avoid the black screen.
+          if (e.data === 1) {
+            iframe.classList.add('loaded');
+          }
           // State 2 = paused, 0 = ended, -1 = unstarted, 5 = cued.
           // If the player drops out of playing, push it back.
           if (e.data === 2 || e.data === 0) {
@@ -733,8 +736,8 @@ function attachYouTubePlayer(iframe) {
   }
 }
 
-function initVideoCards(slide) {
-  const cards = slide.querySelectorAll('.why-card.video-card');
+function initVideoCards(slideOrDoc) {
+  const cards = slideOrDoc.querySelectorAll('.why-card.video-card');
   cards.forEach(card => {
     if (initializedVideoCards.has(card)) return;
     initializedVideoCards.add(card);
@@ -783,7 +786,6 @@ function initVideoCards(slide) {
       iframe.setAttribute('frameborder', '0');
       iframe.setAttribute('tabindex', '-1');
       iframe.title = 'Video';
-      iframe.addEventListener('load', () => iframe.classList.add('loaded'));
       container.appendChild(iframe);
       attachYouTubePlayer(iframe);
     }
@@ -1478,4 +1480,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initConceptDemos();
   initRangeSliderFills();
   setupHowtoModal();
+  initVideoCards(document);
 });
